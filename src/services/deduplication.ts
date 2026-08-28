@@ -1,0 +1,1 @@
+export function deduplicateByPhone<T extends {normalizedPhone:string}>(records:T[]):Map<string,T[]>{const grouped=new Map<string,T[]>();for(const record of records)grouped.set(record.normalizedPhone,[...(grouped.get(record.normalizedPhone)??[]),record]);return grouped;}

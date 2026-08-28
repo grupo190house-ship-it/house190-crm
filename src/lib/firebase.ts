@@ -1,0 +1,9 @@
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { z } from "zod";
+const schema=z.object({apiKey:z.string().min(1),authDomain:z.string().min(1),projectId:z.string().min(1),appId:z.string().min(1)});
+const parsed=schema.safeParse({apiKey:import.meta.env.VITE_FIREBASE_API_KEY,authDomain:import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,projectId:import.meta.env.VITE_FIREBASE_PROJECT_ID,appId:import.meta.env.VITE_FIREBASE_APP_ID});
+export const firebase=parsed.success?initializeApp(parsed.data):null;
+export const auth=firebase?getAuth(firebase):null;
+export const db=firebase?getFirestore(firebase):null;

@@ -1,0 +1,3 @@
+import { Construction } from "lucide-react";
+import { PageHeader } from "@/components/ui/PageHeader";
+export function PlaceholderPage({title,description}:{title:string;description:string}){return <div className="mx-auto max-w-[1100px] p-5 md:p-8 xl:p-10"><PageHeader eyebrow="HOUSE CRM" title={title} description={description}/><div className="mt-8 grid min-h-[360px] place-items-center rounded-[24px] border border-dashed border-black/15 bg-white/55 text-center"><div><Construction className="mx-auto size-8 text-[#c18a00]"/><p className="mt-4 text-sm font-semibold">Módulo preparado para a próxima etapa</p><p className="mt-2 text-xs text-black/40">A estrutura de navegação e permissões já está pronta.</p></div></div></div>}

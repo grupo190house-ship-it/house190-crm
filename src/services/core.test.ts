@@ -1,0 +1,21 @@
+import { describe,expect,it } from "vitest";
+import { classifyOrderBrand } from "./classification";
+import { normalizeBrazilianPhone } from "./phone";
+import { previousLocalDayUtcRange } from "./timezone";
+import { campaignKey,evaluateEligibility } from "./eligibility";
+import { deduplicateByPhone } from "./deduplication";
+const item=(brand:"HOUSE190"|"XTUDO"|"OTHER"|"IGNORE"|"UNMAPPED",canceledAt:null|string=null)=>({id:"1",name:"Produto",amount:1,totalPrice:10,brand,canceledAt});
+describe("regras fail-closed",()=>{
+ it("classifica somente House como elegível por marca",()=>expect(classifyOrderBrand([item("HOUSE190")])).toBe("HOUSE190"));
+ it("exclui X-Tudo",()=>expect(classifyOrderBrand([item("XTUDO")])).toBe("XTUDO"));
+ it("marca pedido misto",()=>expect(classifyOrderBrand([item("HOUSE190"),item("XTUDO")])).toBe("MIXED"));
+ it("bloqueia produto desconhecido",()=>expect(classifyOrderBrand([item("HOUSE190"),item("UNMAPPED")])).toBe("UNMAPPED"));
+ it("ignora item cancelado",()=>expect(classifyOrderBrand([item("HOUSE190"),item("XTUDO","2026-08-27")])).toBe("HOUSE190"));
+ it("normaliza telefone brasileiro",()=>expect(normalizeBrazilianPhone("(73) 99999-9999")).toBe("5573999999999"));
+ it("rejeita telefone inválido",()=>expect(normalizeBrazilianPhone("123")).toBeNull());
+ it("calcula ontem no timezone e converte para UTC",()=>expect(previousLocalDayUtcRange(new Date("2026-08-28T12:00:00Z")).startDate).toBe("2026-08-27T03:00:00Z"));
+ it("bloqueia opt-out",()=>expect(evaluateEligibility({brand:"HOUSE190",phone:"5573999999999",blocked:true,whatsappOptIn:true,minimumDaysBetweenMessages:7,campaignAlreadyExists:false,now:new Date()}).reason).toBe("OPT_OUT"));
+ it("bloqueia frequency cap",()=>expect(evaluateEligibility({brand:"HOUSE190",phone:"5573999999999",blocked:false,whatsappOptIn:true,lastMessageAt:new Date("2026-08-25"),minimumDaysBetweenMessages:7,campaignAlreadyExists:false,now:new Date("2026-08-28")}).reason).toBe("FREQUENCY_CAP"));
+ it("deduplica por telefone",()=>expect(deduplicateByPhone([{normalizedPhone:"1",id:1},{normalizedPhone:"1",id:2}]).size).toBe(1));
+ it("gera chave idempotente",()=>expect(campaignKey("2026-08-27","5573999999999")).toBe("2026-08-27_5573999999999_HOUSE190"));
+});

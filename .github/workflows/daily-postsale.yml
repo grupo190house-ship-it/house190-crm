@@ -1,0 +1,31 @@
+name: Pós-venda diário
+on:
+  schedule:
+    - cron: "0 13 * * *" # 10:00 America/Bahia (UTC-3)
+  workflow_dispatch:
+    inputs:
+      date: { description: "Data local (AAAA-MM-DD)", required: false, type: string }
+      dryRun: { description: "Impedir envio real", required: true, default: true, type: boolean }
+      forceProductSync: { description: "Sincronizar catálogo", required: true, default: false, type: boolean }
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    concurrency: postsale-${{ inputs.date || github.run_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 10 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: Processar Takeat com modo seguro
+        run: pnpm tsx automation/daily-postsale.ts ${{ inputs.date && format('--date={0}', inputs.date) || '' }}
+        env:
+          TAKEAT_EMAIL: ${{ secrets.TAKEAT_EMAIL }}
+          TAKEAT_PASSWORD: ${{ secrets.TAKEAT_PASSWORD }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          WHATSAPP_ACCESS_TOKEN: ${{ secrets.WHATSAPP_ACCESS_TOKEN }}
+          WHATSAPP_PHONE_NUMBER_ID: ${{ secrets.WHATSAPP_PHONE_NUMBER_ID }}
+          WHATSAPP_WABA_ID: ${{ secrets.WHATSAPP_WABA_ID }}
+          DRY_RUN: ${{ github.event_name == 'schedule' && 'true' || inputs.dryRun }}
+          TIMEZONE: America/Bahia
