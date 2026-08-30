@@ -9,7 +9,10 @@ const localDay=dateArg?DateTime.fromISO(dateArg,{zone:env.TIMEZONE}):DateTime.no
 const start=localDay.startOf("day").toUTC().toISO({suppressMilliseconds:true})!;const end=localDay.endOf("day").toUTC().toISO({suppressMilliseconds:true})!;
 const client=new TakeatClient(env.TAKEAT_EMAIL,env.TAKEAT_PASSWORD);
 const restaurant=await client.authenticate();
-const [products,sessions]=await Promise.all([client.getProducts<unknown[]>(),client.getTableSessions<unknown[]>(start,end)]);
+const checks=await Promise.allSettled([client.getProducts<unknown[]>(),client.getTableSessions<unknown[]>(start,end)]);
+const failures=checks.flatMap((result,index)=>result.status==="rejected"?[`${index===0?"products":"table-sessions"}: ${result.reason instanceof Error?result.reason.message:"unknown error"}`]:[]);
+if(failures.length)throw new Error(`Takeat external API check failed: ${failures.join("; ")}`);
+const [products,sessions]=checks.map(result=>(result as PromiseFulfilledResult<unknown[]>).value);
 const result=await importTakeat(createAdminDb(env.FIREBASE_SERVICE_ACCOUNT),{restaurant,products,sessions,localDate:localDay.toISODate()!});
 console.info(JSON.stringify({event:"takeat_import_complete",restaurantId:restaurant.id,localDate:localDay.toISODate(),...result,dryRun:env.DRY_RUN==="true"}));
 // WhatsApp delivery remains fail-closed. Importing real data never implies consent or message delivery.
