@@ -15,7 +15,7 @@ Aplicação interna da House 190 para importar as compras do dia anterior da Tak
 - Cliente Takeat com autenticação por execução, retry de `401`, `429` e `5xx`.
 - Firestore Rules administrativas e workflows de CI e importação diária.
 
-Os dados da interface são demonstrativos até que o projeto Firebase, os usuários administrativos, os secrets e o catálogo real da unidade sejam configurados.
+A interface não contém clientes, produtos, datas ou métricas demonstrativas. Ela permanece no estado explícito de configuração pendente até que o projeto Firebase, os usuários administrativos e os secrets da Takeat sejam configurados; depois disso, exibe exclusivamente registros importados das integrações reais.
 
 ## Stack
 
