@@ -3,7 +3,7 @@ const sessionSchema = z.object({
   restaurant: z.object({ id: z.number(), name: z.string(), fantasy_name: z.string() }),
   token: z.string().min(1),
 });
-const BASE_URL = "https://backend-pdv.takeat.app";
+const BASE_URL = "https://webhook.takeat.app";
 
 export class TakeatApiError extends Error {
   constructor(public readonly path: string, public readonly status: number) {
